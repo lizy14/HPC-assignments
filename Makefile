@@ -17,5 +17,5 @@ jacobi.o:jacobi.c
 clean:
 	rm -rf ./*.o main
 
-run:
+run:main
 	./main

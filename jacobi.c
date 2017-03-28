@@ -68,10 +68,9 @@ int*** jacobi(int*** original, int d, int h, int w, int step) {
 			}
 		}
 		// Exchange grid and other_grid;
-		int*** tmp = create(d, h, w);
-		copy(tmp, grid, d, h, w);
-		copy(grid, other_grid, d, h, w);
-		copy(other_grid, tmp, d, h, w);
+		int*** tmp = grid;
+		grid = other_grid;
+		other_grid = tmp;
 	}
 	destroy(grid, d, h);
 	return other_grid;
