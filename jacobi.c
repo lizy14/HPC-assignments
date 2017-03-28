@@ -12,9 +12,9 @@ int*** create(int d, int h, int w) {
 };
 
 int*** copy(int*** dst, int*** src, int d, int h, int w) {
-	for (int x = 0; x < w; x++) {
+	for (int z = 0; z < d; z++) {
 		for (int y = 0; y < h; y++) {
-			for (int z = 0; z < d; z++) {
+			for (int x = 0; x < w; x++) {
 				dst[z][y][x] = src[z][y][x];
 			}
 		}
@@ -51,9 +51,9 @@ int*** jacobi(int*** original, int d, int h, int w, int step) {
 	int*** other_grid = original;
 
 	for (int t = 0; t < step; t++) {		
-		for (int x = 0; x < w; x++) {
+		for (int z = 0; z < d; z++) {
 			for (int y = 0; y < h; y++) {
-				for (int z = 0; z < d; z++) {
+				for (int x = 0; x < w; x++) {
 					// grid[x][y][z] = avg of neighbors in other_grid*/
 					int sum_neibours =
 						other_grid[z][y][min(x + 1, w-1)] +
