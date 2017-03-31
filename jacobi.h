@@ -11,12 +11,13 @@
 #define min(x, y) ((x)<(y)?(x):(y))
 #endif
 
+#define type double
 
-int*** randomize(int*** m, int d, int h, int w, int seed);
-int*** jacobi(int*** original, int d, int h, int w, int step);
-int*** create(int d, int h, int w);
-int*** copy(int*** dst, int*** src, int d, int h, int w);
-int destroy(int*** m, int d, int h);
+type*** randomize(type*** m, size_t d, size_t h, size_t w, int seed);
+type*** jacobi(type*** original, size_t d, size_t h, size_t w, int step);
+type*** create(size_t d, size_t h, size_t w);
+type*** copy(type*** dst, type*** src, size_t d, size_t h, size_t w);
+void destroy(type*** m, size_t d, size_t h);
 
 //#define ORDER_XYZ
 

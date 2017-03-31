@@ -1,20 +1,20 @@
 #include "jacobi.h"
 
-int*** create(int d, int h, int w) {
-	int*** m = (int***)malloc(d * sizeof(int**));
-	for (int z = 0; z < d; z++) {
-		m[z] = (int**)malloc(h * sizeof(int*));
-		for (int y = 0; y < w; y++) {
-			m[z][y] = (int*)malloc(w * sizeof(int));
+type*** create(size_t d, size_t h, size_t w) {
+	type*** m = (type***)malloc(d * sizeof(type**));
+	for (size_t z = 0; z < d; z++) {
+		m[z] = (type**)malloc(h * sizeof(type*));
+		for (size_t y = 0; y < w; y++) {
+			m[z][y] = (type*)malloc(w * sizeof(type));
 		}
 	}
 	return m;
 };
 
-int*** copy(int*** dst, int*** src, int d, int h, int w) {
-	for (int z = 0; z < d; z++) {
-		for (int y = 0; y < h; y++) {
-			for (int x = 0; x < w; x++) {
+type*** copy(type*** dst, type*** src, size_t d, size_t h, size_t w) {
+	for (size_t z = 0; z < d; z++) {
+		for (size_t y = 0; y < h; y++) {
+			for (size_t x = 0; x < w; x++) {
 				dst[z][y][x] = src[z][y][x];
 			}
 		}
@@ -22,21 +22,21 @@ int*** copy(int*** dst, int*** src, int d, int h, int w) {
 	return dst;
 }
 
-int destroy(int*** m, int d, int h) {
-	for (int z = 0; z < d; z++) {
-		for (int y = 0; y < h; y++) {
+void destroy(type*** m, size_t d, size_t h) {
+	for (size_t z = 0; z < d; z++) {
+		for (size_t y = 0; y < h; y++) {
 			free(m[z][y]);
 		}
 		free(m[z]);
 	}
-	return 0;
+	return;
 }
 
-int*** randomize(int*** m, int d, int h, int w, int seed) {
+type*** randomize(type*** m, size_t d, size_t h, size_t w, int seed) {
 	srand(seed);
-	for (int z = 0; z < d; z++) {
-		for (int y = 0; y < h; y++) {
-			for (int x = 0; x < w; x++) {
+	for (size_t z = 0; z < d; z++) {
+		for (size_t y = 0; y < h; y++) {
+			for (size_t x = 0; x < w; x++) {
 				m[z][y][x] = rand();
 			}
 		}
@@ -44,18 +44,18 @@ int*** randomize(int*** m, int d, int h, int w, int seed) {
 	return m;
 }
 
-int*** jacobi(int*** original, int d, int h, int w, int step) {
+type*** jacobi(type*** original, size_t d, size_t h, size_t w, int step) {
 
-	int*** extra = create(d, h, w);
-	int*** grid = extra;
-	int*** other_grid = original;
+	type*** extra = create(d, h, w);
+	type*** grid = extra;
+	type*** other_grid = original;
 
 	for (int t = 0; t < step; t++) {		
-		for (int z = 1; z < d - 1; z++) {
-			for (int y = 1; y < h - 1; y++) {
-				for (int x = 1; x < w - 1; x++) {
+		for (size_t z = 1; z < d - 1; z++) {
+			for (size_t y = 1; y < h - 1; y++) {
+				for (size_t x = 1; x < w - 1; x++) {
 					// grid[x][y][z] = avg of neighbors in other_grid*/
-					int sum_neibours =
+					type sum_neibours =
 						other_grid[z][y][x + 1] +
 						other_grid[z][y][x - 1] +
 						other_grid[z][y + 1][x] +
@@ -68,7 +68,7 @@ int*** jacobi(int*** original, int d, int h, int w, int step) {
 			}
 		}
 		// Exchange grid and other_grid;
-		int*** tmp = grid;
+		type*** tmp = grid;
 		grid = other_grid;
 		other_grid = tmp;
 	}
