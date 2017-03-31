@@ -6,7 +6,7 @@
 #define D_X D
 #define D_Y D
 #define D_Z D
-#define N_STEPS 1000
+#define N_STEPS 100
 #define N_SAMPLES 6
 
 int evaluate() {
@@ -14,7 +14,7 @@ int evaluate() {
 	randomize(m, D_Z, D_Y, D_X, 0);
 
 	clock_t start = clock();	
-	jacobi(m, D_Z, D_Y, D_X, 100);
+	jacobi(m, D_Z, D_Y, D_X, N_STEPS);
 	clock_t diff = clock() - start;
 
 	int msec = diff * 1000 / CLOCKS_PER_SEC;

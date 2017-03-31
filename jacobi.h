@@ -4,8 +4,12 @@
 #include <stdio.h>
 #include <time.h>
 
+#ifndef max
 #define max(x, y) ((x)>(y)?(x):(y))
+#endif
+#ifndef min
 #define min(x, y) ((x)<(y)?(x):(y))
+#endif
 
 
 int*** randomize(int*** m, int d, int h, int w, int seed);
