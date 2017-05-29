@@ -1,0 +1,10 @@
+mpirun -n 8 ./stencil 80 80 80 1000 
+mpirun -n 8 ./stencil 150 150 150 500
+mpirun -n 8 ./stencil 500 500 500 200
+mpirun -n 8 ./stencil 266 798 2394 200
+mpirun -n 8 ./stencil 100 20000 256 200
+mpirun -n 8 ./stencil 20000 100 256 200
+mpirun -n 8 ./stencil 2372 2372 91 200
+mpirun -n 8 ./stencil 81 81 78000 200
+mpirun -n 8 ./stencil 800 800 800 200
+mpirun -n 8 ./stencil 1200 1200 1200 100
