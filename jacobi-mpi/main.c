@@ -19,7 +19,8 @@ int test(){
 int test_partition(){
     int n = 27;
     int k = 4;
-    for(int i=0; i<k; ++i){
+    int i;
+    for(i=0; i<k; ++i){
         printf(
             "%d %d %d\n",
             i,
@@ -42,7 +43,8 @@ int number_of_elements_in_group(int i, int n, int k){
 // 27 / 4 -> 6, 13, 20, 26
 int index_of_last_element_in_group(int i, int n, int k){
     int result = -1;
-    for(int _=0; _<=i; ++_){
+    int _;
+    for(_=0; _<=i; ++_){
         result += number_of_elements_in_group(_, n, k);
     }
     return result;
@@ -104,7 +106,7 @@ int stencil(double *A, double *B, int nx, int ny, int nz, int steps)
 
 int main(int argc, char **argv) {
     return test();
-/*
+
     double *A = NULL, *B = NULL;
     int myrank, nprocs, nx, ny, nz;
     int NX=100, NY=100, NZ=100, STEPS=10;
@@ -155,5 +157,4 @@ int main(int argc, char **argv) {
     free(B);
 
     MPI_Finalize();
-    */
 }
