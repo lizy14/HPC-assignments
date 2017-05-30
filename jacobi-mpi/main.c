@@ -17,11 +17,11 @@ int test_partition(){
     int i;
     for(i=0; i<k; ++i){
         printf(
-            "%d %d %d\n",
-            i,
-            number_of_elements_in_group(i, n, k),
-            index_of_last_element_in_group(i, n, k)
-        );
+                "%d %d %d\n",
+                i,
+                number_of_elements_in_group(i, n, k),
+                index_of_last_element_in_group(i, n, k)
+              );
 
     }
     return 0;
@@ -51,13 +51,16 @@ int index_of_last_element_in_group(int i, int n, int k){
 int stencil(
         double *A, double *B,
         int nx, int ny, int nz, int steps,
-        int first, int last, int rank)
+        int first, int last, int rank, int nprocs)
 {
-    int i, j, k, s;
+    int i, j, k, step;
 
 #define IDX(i,j,k) ((i) + (j)*nx + (k)*nx*ny)
 
-    for(s = 0; s < steps; s ++) {
+    int s = nx * ny;
+    int i_am_head = first == 0;
+    int i_am_tail = last == nz - 1;
+    for(step = 0; s < steps; step ++) {
 
         for(k = first; k <= last; k ++) {
 
@@ -83,11 +86,10 @@ int stencil(
             }
         }
         // message passing
-        int s = nx * ny;
+
         MPI_Request reqs[4];
         MPI_Status stats[4];
-        int i_am_head = first == 0;
-        int i_am_tail = last == nz - 1;
+
         if(i_am_tail && i_am_head){
             // only one worker, nothing done
         }else{
@@ -134,11 +136,36 @@ int stencil(
         double *tmp = NULL;
         tmp = A, A = B, B = tmp;
     }
+
+    // send everything to master 0
+    if(rank == 0){
+        int _i;
+        for(_i=1; _i<nprocs; ++_i){
+
+            int _n = number_of_elements_in_group(_i, nz, nprocs);
+            int _last = index_of_last_element_in_group(_i, nz, nprocs);
+            int _first = last - _n + 1;
+            MPI_Status st;
+            MPI_Recv(B + IDX(0,0,_first),
+                    s * _n, MPI_DOUBLE,
+                    _i,
+                    0, MPI_COMM_WORLD,
+                    &st
+                    );
+        }
+    }else{
+        MPI_Send(B + IDX(0,0,first),
+                s*(last - first + 1), MPI_DOUBLE,
+                0, // master
+                0, MPI_COMM_WORLD
+                );
+    }
+
     return 0;
 }
 
 int main(int argc, char **argv) {
-//    return test();
+    //    return test();
 
     double *A = NULL, *B = NULL;
     int myrank, nprocs, nx, ny, nz;
@@ -182,7 +209,7 @@ int main(int argc, char **argv) {
     MPI_Barrier(MPI_COMM_WORLD);
     gettimeofday(&t1, NULL);
 
-    stencil(A, B, nx, ny, nz, STEPS, first, last, myrank);
+    stencil(A, B, nx, ny, nz, STEPS, first, last, myrank, nprocs);
 
     MPI_Barrier(MPI_COMM_WORLD);
     gettimeofday(&t2, NULL);
@@ -191,11 +218,7 @@ int main(int argc, char **argv) {
         printf("Total time: %.6lf\n", TIME(t1,t2));
     }
 
-    if(STEPS%2){
-        Check(B, size);
-    }else{
-        Check(A, size);
-    }
+    Check(A, size);
 
     free(A);
     free(B);
