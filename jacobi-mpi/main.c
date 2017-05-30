@@ -13,6 +13,41 @@ typedef struct
     int nx, ny, nz;
 } Info;
 
+int test(){
+    return test_partition();
+}
+int test_partition(){
+    int n = 27;
+    int k = 4;
+    for(int i=0; i<k; ++i){
+        printf(
+            "%d %d %d\n",
+            i,
+            number_of_elements_in_group(i, n, k),
+            index_of_last_element_in_group(i, n, k)
+        );
+
+    }
+    return 0;
+}
+
+// evenly distribute elements into groups
+// i-th (starting from 0) group; n elements; k groups
+// 27 / 4 -> 7, 7, 7, 6
+int number_of_elements_in_group(int i, int n, int k){
+    int q = n / k;
+    int r = n % k;
+    return q + (i < r? 1: 0);
+}
+// 27 / 4 -> 6, 13, 20, 26
+int index_of_last_element_in_group(int i, int n, int k){
+    int result = -1;
+    for(int _=0; _<=i; ++_){
+        result += number_of_elements_in_group(_, n, k);
+    }
+    return result;
+}
+
 //Must be modified because only single process is used now
 Info setup(int NX, int NY, int NZ, int P)
 {
@@ -68,6 +103,8 @@ int stencil(double *A, double *B, int nx, int ny, int nz, int steps)
 }
 
 int main(int argc, char **argv) {
+    return test();
+/*
     double *A = NULL, *B = NULL;
     int myrank, nprocs, nx, ny, nz;
     int NX=100, NY=100, NZ=100, STEPS=10;
@@ -118,4 +155,5 @@ int main(int argc, char **argv) {
     free(B);
 
     MPI_Finalize();
+    */
 }
