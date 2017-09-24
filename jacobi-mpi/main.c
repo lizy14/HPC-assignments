@@ -3,7 +3,7 @@
 #include <mpi.h>
 #include <math.h>
 #define TIME(a,b) (1.0*((b).tv_sec-(a).tv_sec)+0.000001*((b).tv_usec-(a).tv_usec))
-
+#define debug_printf(fmt, ...) (0)
 extern int Init(double *data, long long L);
 extern int Check(double *data, long long L);
 
@@ -53,17 +53,13 @@ int stencil(
         int nx, int ny, int nz, int steps,
         int first, int last, int rank, int nprocs)
 {
-    int i, j, k, step;
-
-#define IDX(i,j,k) ((i) + (j)*nx + (k)*nx*ny)
-
+    #define IDX(i,j,k) ((i) + (j)*nx + (k)*nx*ny)
     int s = nx * ny;
     int i_am_head = first == 0;
     int i_am_tail = last == nz - 1;
-    for(step = 0; s < steps; step ++) {
-
+    int i, j, k, step;
+    for(step = 0; step < steps; step ++) {
         for(k = first; k <= last; k ++) {
-
             for(j = 0; j < ny; j ++) {
                 for(i = 0; i < nx; i ++) {
 
@@ -81,6 +77,7 @@ int stencil(
                     else          r += 0.1*A[IDX(i,j,k)];
                     if(i != nx-1) r += 0.1*A[IDX(i+1,j,k)];
                     else          r += 0.1*A[IDX(i,j,k)];
+//                    debug_printf("#%d: %d, %d, %d: r=%lf\n", rank, i,j,k, r);
                     B[IDX(i,j,k)] = r;
                 }
             }
@@ -89,6 +86,9 @@ int stencil(
 
         MPI_Request reqs[4];
         MPI_Status stats[4];
+
+//        debug_printf("#%d: tail=%d, head=%d, s=%d, first=%d, last=%d\n", rank, i_am_tail, i_am_head, s, first, last);
+        debug_printf("#%d: %lf, %lf, %lf, %lf\n", rank, B[0], B[1], B[2], B[3]);
 
         if(i_am_tail && i_am_head){
             // only one worker, nothing done
@@ -130,13 +130,15 @@ int stencil(
             }
         }
 
+        debug_printf("#%d synced: %lf, %lf, %lf, %lf\n", rank, B[0], B[1], B[2], B[3]);
+
 
 
 
         double *tmp = NULL;
         tmp = A, A = B, B = tmp;
     }
-
+MPI_Barrier(MPI_COMM_WORLD);
     // send everything to master 0
     if(rank == 0){
         int _i;
@@ -144,7 +146,7 @@ int stencil(
 
             int _n = number_of_elements_in_group(_i, nz, nprocs);
             int _last = index_of_last_element_in_group(_i, nz, nprocs);
-            int _first = last - _n + 1;
+            int _first = _last - _n + 1;
             MPI_Status st;
             MPI_Recv(B + IDX(0,0,_first),
                     s * _n, MPI_DOUBLE,
@@ -160,6 +162,30 @@ int stencil(
                 0, MPI_COMM_WORLD
                 );
     }
+//return 0;
+
+        debug_printf("#%d sent to master: %lf, %lf, %lf, %lf\n", rank, B[0], B[1], B[2], B[3]);
+        MPI_Barrier(MPI_COMM_WORLD);
+    if(rank == 0){
+        int _i;
+        for(_i=1; _i<nprocs; ++_i){
+            MPI_Send(B, s * nz, MPI_DOUBLE, _i, 0, MPI_COMM_WORLD);
+        }
+    }else{
+        MPI_Status st;
+        MPI_Recv(B, s * nz, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &st);
+    }
+
+        debug_printf("#%d returning: %lf, %lf, %lf, %lf\n", rank, B[0], B[1], B[2], B[3]);
+/*    MPI_Allgather(
+        B,
+        s * (last - first + 1),
+        MPI_DOUBLE,
+        A,
+        s * nz,
+        MPI_DOUBLE,
+        MPI_COMM_WORLD
+            );*/
 
     return 0;
 }
@@ -199,6 +225,7 @@ int main(int argc, char **argv) {
     Init(A, size);
 
 
+    debug_printf("Initialized: %lf, %lf, %lf, %lf\n", A[0], A[1], A[2], A[3]);
     // get assignment
     int n = number_of_elements_in_group(myrank, nz, nprocs);
     int last = index_of_last_element_in_group(myrank, nz, nprocs);
@@ -209,6 +236,8 @@ int main(int argc, char **argv) {
     MPI_Barrier(MPI_COMM_WORLD);
     gettimeofday(&t1, NULL);
 
+    debug_printf("#%d: %d - %d\n", myrank, first, last);
+
     stencil(A, B, nx, ny, nz, STEPS, first, last, myrank, nprocs);
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -217,8 +246,14 @@ int main(int argc, char **argv) {
     if(myrank == 0){
         printf("Total time: %.6lf\n", TIME(t1,t2));
     }
+    if(STEPS % 2){
+        double* tmp = B;
+        B = A;
+        A = tmp;
+    }
+    debug_printf("#%d Checking: %lf, %lf, %lf, %lf\n", myrank, B[0], B[1], B[2], B[3]);
+    Check(B, size);
 
-    Check(A, size);
 
     free(A);
     free(B);
